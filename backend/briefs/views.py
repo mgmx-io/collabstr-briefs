@@ -32,4 +32,7 @@ def generate_brief(request):
             {"error": "Brief generation failed. Try again."}, status=502
         )
 
+    if "rejection_reason" in data:
+        return JsonResponse({"error": data["rejection_reason"]}, status=422)
+
     return JsonResponse({**data, "metrics": metrics})
