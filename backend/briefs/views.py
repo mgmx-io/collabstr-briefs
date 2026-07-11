@@ -1,38 +1,24 @@
-import anthropic
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from pydantic import ValidationError
+from briefs.exceptions import BriefRejected
 from briefs.ratelimit import rate_limited
 from briefs.schemas import BriefRequest
 from briefs.services import llm
 
 
-def validation_error_response(e):
-    errors = e.errors(include_url=False, include_context=False, include_input=False)
-    return JsonResponse({"errors": errors}, status=400)
-
-
 @require_POST
 @rate_limited
 def generate_brief(request):
-    try:
-        payload = BriefRequest.model_validate_json(request.body)
-    except ValidationError as e:
-        return validation_error_response(e)
+    payload = BriefRequest.model_validate_json(request.body)
 
-    try:
-        data, metrics = llm.generate_brief(
-            brand_name=payload.brand_name,
-            platform=payload.platform,
-            goal=payload.goal,
-            tone=payload.tone,
-        )
-    except anthropic.APIError:
-        return JsonResponse(
-            {"error": "Brief generation failed. Try again."}, status=502
-        )
+    data, metrics = llm.generate_brief(
+        brand_name=payload.brand_name,
+        platform=payload.platform,
+        goal=payload.goal,
+        tone=payload.tone,
+    )
 
     if "rejection_reason" in data:
-        return JsonResponse({"error": data["rejection_reason"]}, status=422)
+        raise BriefRejected(data["rejection_reason"])
 
     return JsonResponse({**data, "metrics": metrics})

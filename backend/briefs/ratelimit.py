@@ -1,7 +1,6 @@
 from functools import wraps
-
 from django.core.cache import cache
-from django.http import JsonResponse
+from briefs.exceptions import RateLimitExceeded
 
 MAX_REQUESTS = 10
 WINDOW_SECONDS = 60
@@ -14,7 +13,7 @@ def rate_limited(view):
         cache.add(key, 0, WINDOW_SECONDS)
         count = cache.incr(key)
         if count > MAX_REQUESTS:
-            return JsonResponse({"error": "Too many requests"}, status=429)
+            raise RateLimitExceeded()
         response = view(request, *args, **kwargs)
         response["X-RateLimit-Remaining"] = MAX_REQUESTS - count
         return response
