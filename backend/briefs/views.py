@@ -1,3 +1,4 @@
+import anthropic
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from pydantic import ValidationError
@@ -19,11 +20,16 @@ def generate_brief(request):
     except ValidationError as e:
         return validation_error_response(e)
 
-    data, metrics = llm.generate_brief(
-        brand_name=payload.brand_name,
-        platform=payload.platform,
-        goal=payload.goal,
-        tone=payload.tone,
-    )
+    try:
+        data, metrics = llm.generate_brief(
+            brand_name=payload.brand_name,
+            platform=payload.platform,
+            goal=payload.goal,
+            tone=payload.tone,
+        )
+    except anthropic.APIError:
+        return JsonResponse(
+            {"error": "Brief generation failed. Try again."}, status=502
+        )
 
     return JsonResponse({**data, "metrics": metrics})
