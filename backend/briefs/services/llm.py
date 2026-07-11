@@ -1,4 +1,5 @@
 import json
+import time
 
 from anthropic import Anthropic
 
@@ -31,11 +32,20 @@ BRIEF_FORMAT = {
 client = Anthropic()
 
 
+def build_metrics(response, start, end):
+    return {
+        "latency_ms": int((end - start) * 1000),
+        "input_tokens": response.usage.input_tokens,
+        "output_tokens": response.usage.output_tokens,
+    }
+
+
 def generate_brief(brand_name, platform, goal, tone):
     user_prompt = (
         f"Brand: {brand_name}\nPlatform: {platform}\nGoal: {goal}\nTone: {tone}"
     )
 
+    start = time.monotonic()
     response = client.messages.create(
         model=MODEL,
         max_tokens=MAX_TOKENS,
@@ -43,4 +53,9 @@ def generate_brief(brand_name, platform, goal, tone):
         messages=[{"role": "user", "content": user_prompt}],
         output_config={"format": BRIEF_FORMAT},
     )
-    return json.loads(response.content[0].text)
+    end = time.monotonic()
+
+    data = json.loads(response.content[0].text)
+    metrics = build_metrics(response, start, end)
+
+    return data, metrics

@@ -17,10 +17,11 @@ def generate_brief(request):
     except ValidationError as e:
         return validation_error_response(e)
 
-    result = llm.generate_brief(
+    data, metrics = llm.generate_brief(
         brand_name=payload.brand_name,
         platform=payload.platform,
         goal=payload.goal,
         tone=payload.tone,
     )
-    return JsonResponse(result)
+
+    return JsonResponse({**data, "metrics": metrics})
