@@ -2,6 +2,7 @@ import json
 import time
 
 from anthropic import Anthropic
+from briefs.exceptions import BriefRejected
 
 MODEL = "claude-haiku-4-5"
 MAX_TOKENS = 1024
@@ -54,7 +55,9 @@ def build_metrics(response, start, end):
     }
 
 
-def generate_brief(brand_name, platform, goal, tone):
+def generate_brief(
+    *, brand_name: str, platform: str, goal: str, tone: str
+) -> tuple[dict, dict]:
     user_prompt = (
         f"Brand: {brand_name}\nPlatform: {platform}\nGoal: {goal}\nTone: {tone}"
     )
@@ -71,5 +74,8 @@ def generate_brief(brand_name, platform, goal, tone):
 
     data = json.loads(response.content[0].text)
     metrics = build_metrics(response, start, end)
+
+    if "rejection_reason" in data:
+        raise BriefRejected(data["rejection_reason"])
 
     return data, metrics

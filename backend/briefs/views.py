@@ -1,6 +1,5 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from briefs.exceptions import BriefRejected
 from briefs.ratelimit import rate_limited
 from briefs.schemas import BriefRequest
 from briefs.services import llm
@@ -17,8 +16,5 @@ def generate_brief(request):
         goal=payload.goal,
         tone=payload.tone,
     )
-
-    if "rejection_reason" in data:
-        raise BriefRejected(data["rejection_reason"])
 
     return JsonResponse({**data, "metrics": metrics})
