@@ -2,7 +2,9 @@
 
 Expo (React Native) app + Django API that generates influencer campaign briefs with Claude.
 
-**Demo:** [Loom](TODO)
+**Demo:**
+
+https://github.com/user-attachments/assets/db007004-8f60-4d4d-8e63-a22ff5ddddbb
 
 **Try it now:** install [Expo Go](https://expo.dev/go) and scan
 
