@@ -26,9 +26,9 @@ App:
 
 ```sh
 cd mobile
-npm install
+bun install
 echo "EXPO_PUBLIC_API_URL=http://localhost:8000" > .env
-npm start
+bun start
 ```
 
 ## Notes
