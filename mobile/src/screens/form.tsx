@@ -1,8 +1,13 @@
 import { useNavigation } from "@react-navigation/native";
+import { isAxiosError } from "axios";
 import { useState } from "react";
-import { Button, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { useGenerateBrief } from "@/api/queries";
+import { Button } from "@/components/button";
+import { Banner } from "@/components/banner";
 import { OptionSelector } from "@/components/option-selector";
+import { TextField } from "@/components/text-field";
+import { colors, space } from "@/theme";
 import type { BriefRequest, Goal, Platform, Tone } from "@/types/api";
 
 const PLATFORMS = ["Instagram", "TikTok", "UGC"] satisfies Platform[];
@@ -30,6 +35,14 @@ function buildPayload(form: FormState): BriefRequest | null {
   return { brandName, platform, goal, tone };
 }
 
+function formatError(error: Error): string {
+  if (isAxiosError(error) && typeof error.response?.data?.error === "string") {
+    return error.response.data.error;
+  }
+
+  return "Something went wrong. Please try again.";
+}
+
 export function Form() {
   const navigation = useNavigation();
   const [form, setForm] = useState(initialForm);
@@ -46,13 +59,18 @@ export function Form() {
   };
 
   return (
-    <View>
-      <TextInput
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <TextField
+        label="Brand name"
         value={form.brandName}
         onChangeText={(brandName) =>
           setForm((prev) => ({ ...prev, brandName }))
         }
-        placeholder="Brand name"
+        placeholder="e.g. Nike"
         autoCorrect={false}
       />
 
@@ -77,13 +95,25 @@ export function Form() {
         onChange={(tone) => setForm((prev) => ({ ...prev, tone }))}
       />
 
-      {error != null && <Text>{error.message}</Text>}
+      {error != null && <Banner variant="error" message={formatError(error)} />}
 
       <Button
-        title={isPending ? "Generating..." : "Generate"}
+        title="Generate"
         onPress={handleSubmit}
         disabled={!canSubmit}
+        loading={isPending}
       />
-    </View>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: colors.bgPrimary,
+    flex: 1,
+  },
+  content: {
+    gap: space[6],
+    padding: space[6],
+  },
+});
